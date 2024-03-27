@@ -1,0 +1,147 @@
+---
+title: "IMDB TOP 250 Movies"
+author: "Hamed Ahmadi"
+institute: "American University"
+date: "`r Sys.Date()`"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: [default, rladies, rutgers-fonts]
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      ratio: "16:9"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE, 
+  prompt = FALSE,
+  tidy = FALSE, 
+  comment = NA,
+  message = FALSE, 
+  warning = FALSE
+)
+library(tidyverse)
+library(patchwork)
+df <- read_csv("IMDB_Top250Engmovies2_OMDB_Detailed.csv")
+```
+class: left, middle
+## Data
+
+The dataset encompasses the top 250 movies from IMDB and features detailed attributes, including genre, ratings, release year, runtime, director, studio, language, country, and actors, among others. The data, owned by "TheMitchWorksPro" and sourced from https://data.world/studentoflife/imdb-top-250-lists-and-5000-or-so-data-records, was curated to focus on genre trends and the distribution of ratings.
+  
+---
+class: left
+## IMDB Top 250 Ratings Distribution
+
+```{r, fig.width=16, fig.height=8}
+plot1 = ggplot(df, aes(x = imdbRating)) +
+  geom_histogram(binwidth = 0.1, fill = '#9966CC', color = 'black') +
+  theme_minimal() +
+  labs(
+    x = "IMDB Rating",
+    y = "Count") +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.title = element_text(size =14),
+        axis.text = element_text(size = 12),
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+        panel.grid.minor = element_blank()  # Optional: Removes minor grid lines
+)
+
+plot1
+```
+
+---
+## Top 250 Movies Across Decades
+
+```{r combined_plot, message=FALSE, fig.width=14, fig.height=7}
+
+# Assuming df is your data frame and it has been loaded correctly
+df <- df %>%
+  mutate(
+    Year = as.numeric(Year),  # Ensure Year is numeric
+    Decade = floor(Year / 10) * 10  # Create Decade column
+  ) %>%
+  separate_rows(Genre, sep = ", ")  # Separate genres into individual rows for each movie
+
+# Get the ten most common genres
+top_genres <- df %>%
+  count(Genre) %>%
+  top_n(10) %>%
+  pull(Genre)
+
+# Filter the data to include only the ten most common genres
+df <- df %>% filter(Genre %in% top_genres)
+
+# Define a custom color palette with distinct colors for each genre
+genre_colors <- c("#E41A1C", "#377EB8", "#4DAF4A", "#FF7F00", "#F781BF", 
+                  "#A65628", "#984EA3", "#999999", "#66C2A5", "#FFD92F")
+
+# Now, calculate the proportion of movies within each genre for each decade
+df_decade_genre <- df %>%
+  group_by(Decade, Genre) %>%
+  summarise(MovieCount = n(), .groups = 'drop') %>%
+  group_by(Decade) %>%
+  mutate(TotalMovies = sum(MovieCount),
+         Proportion = MovieCount / TotalMovies) %>%
+  ungroup()
+
+
+plot2_1 = ggplot(df_decade_genre, aes(x = as.factor(Decade), y = Proportion, fill = Genre)) +
+  geom_bar(stat = "identity", position = "fill") +
+  scale_fill_manual(values = genre_colors) +
+  theme_minimal() +
+  labs(title = "Genre Prevalence in Top 250 Movies Across Decades",
+       x = "Decade",
+       y = "Proportion of Movies",
+       fill = "Genre") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  scale_x_discrete(labels = function(x) paste0(x, "s")) + # Adding "s" to decade labels
+  theme(
+    plot.title = element_text(hjust = 0, size = 20, face = "bold"), # Center and enhance title size for better readability
+    legend.position = "right", # Adjust legend to the right side
+    legend.title = element_text(size = 16), # Enhance legend title size
+    legend.text = element_text(size = 14), # Enhance legend text size
+    legend.key.size = unit(0.9, "cm"),
+    axis.title.x = element_blank(), # Enhance X axis title size
+    axis.title.y = element_text(size = 12), # Enhance Y axis title size
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 14, face = "bold"), # Rotate X axis labels for better legibility
+    axis.text.y = element_text(size = 12) # Enhance Y axis text size
+  )
+
+
+
+df_decade_count <- df %>%
+  group_by(Decade) %>%
+  summarise(MovieCount = n(), .groups = 'drop') %>%
+  arrange(Decade) # Ensure decades are in chronological order
+
+# Enhanced visualization:
+plot2_2 = ggplot(df_decade_count, aes(x = as.factor(Decade), y = MovieCount)) +
+  geom_bar(stat = "identity", fill = 'orange', color = 'darkgrey') + # Improved color for better visual appeal
+  geom_text(aes(label = MovieCount), vjust = -0.3, color = "black", size = 6) + # Add data labels for clarity
+  theme_minimal(base_size = 12) + # Increase base font size for better readability
+  labs(title = "Top 250 Movies Over Decades",
+       x = "Decade",
+       y = "Number of Movies") +
+  scale_x_discrete(labels = function(x) paste0(x, "s")) + # Enhance x-axis labels for clarity
+  theme(plot.title = element_text(hjust = 0, size = 20, face = "bold"), # Center and increase the title font size
+        plot.subtitle = element_text(hjust = 0, size = 12), # Center and adjust subtitle font size
+        axis.title.x = element_blank(), # Enhance X axis title size
+    axis.title.y = element_text(size = 12), # Enhance Y axis title size
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 14, face = "bold"), 
+    axis.text.y = element_text(size = 12), 
+    panel.grid.minor = element_blank(),  # Optional: Removes minor grid lines
+        legend.position = "none")
+
+
+
+# Combine the plots
+combined_plot = plot2_2 + plot2_1
+
+# Display the combined plot
+combined_plot
+
+```
+
