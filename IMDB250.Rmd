@@ -41,7 +41,7 @@ plot1 = ggplot(df, aes(x = imdbRating)) +
         axis.title = element_text(size =14),
         axis.text = element_text(size = 12),
         axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
-        panel.grid.minor = element_blank()  # Optional: Removes minor grid lines
+        panel.grid.minor = element_blank() 
 )
 
 plot1
@@ -52,28 +52,28 @@ plot1
 
 ```{r combined_plot, message=FALSE, fig.width=14, fig.height=7}
 
-# Assuming df is your data frame and it has been loaded correctly
+
 df <- df %>%
   mutate(
-    Year = as.numeric(Year),  # Ensure Year is numeric
-    Decade = floor(Year / 10) * 10  # Create Decade column
+    Year = as.numeric(Year),  
+    Decade = floor(Year / 10) * 10  
   ) %>%
-  separate_rows(Genre, sep = ", ")  # Separate genres into individual rows for each movie
+  separate_rows(Genre, sep = ", ") 
 
-# Get the ten most common genres
+
 top_genres <- df %>%
   count(Genre) %>%
   top_n(10) %>%
   pull(Genre)
 
-# Filter the data to include only the ten most common genres
+
 df <- df %>% filter(Genre %in% top_genres)
 
-# Define a custom color palette with distinct colors for each genre
+
 genre_colors <- c("#E41A1C", "#377EB8", "#4DAF4A", "#FF7F00", "#F781BF", 
                   "#A65628", "#984EA3", "#999999", "#66C2A5", "#FFD92F")
 
-# Now, calculate the proportion of movies within each genre for each decade
+
 df_decade_genre <- df %>%
   group_by(Decade, Genre) %>%
   summarise(MovieCount = n(), .groups = 'drop') %>%
@@ -92,17 +92,17 @@ plot2_1 = ggplot(df_decade_genre, aes(x = as.factor(Decade), y = Proportion, fil
        y = "Proportion of Movies",
        fill = "Genre") +
   scale_y_continuous(labels = scales::percent_format()) +
-  scale_x_discrete(labels = function(x) paste0(x, "s")) + # Adding "s" to decade labels
+  scale_x_discrete(labels = function(x) paste0(x, "s")) + 
   theme(
-    plot.title = element_text(hjust = 0, size = 20, face = "bold"), # Center and enhance title size for better readability
-    legend.position = "right", # Adjust legend to the right side
-    legend.title = element_text(size = 16), # Enhance legend title size
-    legend.text = element_text(size = 14), # Enhance legend text size
+    plot.title = element_text(hjust = 0, size = 20, face = "bold"),
+    legend.position = "right", 
+    legend.title = element_text(size = 16), 
+    legend.text = element_text(size = 14), 
     legend.key.size = unit(0.9, "cm"),
-    axis.title.x = element_blank(), # Enhance X axis title size
-    axis.title.y = element_text(size = 12), # Enhance Y axis title size
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 14, face = "bold"), # Rotate X axis labels for better legibility
-    axis.text.y = element_text(size = 12) # Enhance Y axis text size
+    axis.title.x = element_blank(), 
+    axis.title.y = element_text(size = 12), 
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 14, face = "bold"), 
+    axis.text.y = element_text(size = 12)
   )
 
 
@@ -110,32 +110,32 @@ plot2_1 = ggplot(df_decade_genre, aes(x = as.factor(Decade), y = Proportion, fil
 df_decade_count <- df %>%
   group_by(Decade) %>%
   summarise(MovieCount = n(), .groups = 'drop') %>%
-  arrange(Decade) # Ensure decades are in chronological order
+  arrange(Decade) 
 
-# Enhanced visualization:
+
 plot2_2 = ggplot(df_decade_count, aes(x = as.factor(Decade), y = MovieCount)) +
-  geom_bar(stat = "identity", fill = 'orange', color = 'darkgrey') + # Improved color for better visual appeal
-  geom_text(aes(label = MovieCount), vjust = -0.3, color = "black", size = 6) + # Add data labels for clarity
-  theme_minimal(base_size = 12) + # Increase base font size for better readability
+  geom_bar(stat = "identity", fill = 'orange', color = 'darkgrey') + 
+  geom_text(aes(label = MovieCount), vjust = -0.3, color = "black", size = 6) + 
+  theme_minimal(base_size = 12) + 
   labs(title = "Top 250 Movies Over Decades",
        x = "Decade",
        y = "Number of Movies") +
-  scale_x_discrete(labels = function(x) paste0(x, "s")) + # Enhance x-axis labels for clarity
-  theme(plot.title = element_text(hjust = 0, size = 20, face = "bold"), # Center and increase the title font size
-        plot.subtitle = element_text(hjust = 0, size = 12), # Center and adjust subtitle font size
-        axis.title.x = element_blank(), # Enhance X axis title size
-    axis.title.y = element_text(size = 12), # Enhance Y axis title size
+  scale_x_discrete(labels = function(x) paste0(x, "s")) + 
+  theme(plot.title = element_text(hjust = 0, size = 20, face = "bold"), 
+        plot.subtitle = element_text(hjust = 0, size = 12), 
+        axis.title.x = element_blank(), 
+    axis.title.y = element_text(size = 12), 
     axis.text.x = element_text(angle = 45, hjust = 1, size = 14, face = "bold"), 
     axis.text.y = element_text(size = 12), 
-    panel.grid.minor = element_blank(),  # Optional: Removes minor grid lines
+    panel.grid.minor = element_blank(),  
         legend.position = "none")
 
 
 
-# Combine the plots
+
 combined_plot = plot2_2 + plot2_1
 
-# Display the combined plot
+
 combined_plot
 
 ```
